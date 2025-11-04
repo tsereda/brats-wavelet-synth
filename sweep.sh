@@ -17,7 +17,7 @@ ENTITY="timgsereda"
 USE_JOBS=false
 
 # PVC Offset Configuration (to exclude 1, 2, 3, 4)
-PVC_OFFSET=4
+PVC_OFFSET=2
 
 # Parse arguments
 NUM_AGENTS=$DEFAULT_NUM_AGENTS
