@@ -5,7 +5,7 @@ metadata:
   namespace: gai-lina-group
   labels:
     app: wandb-sweep
-    sweepId: {SWEEP_ID}   # <--- MUST BE ADDED
+    sweepId: {SWEEP_ID}
 spec:
   nodeSelector:
     nautilus.io/linstor: "true"

@@ -122,35 +122,27 @@ check_existing_resources() {
 
     echo "Checking for existing $DEPLOYMENT_TYPE_PLURAL matching resource name prefix '$RESOURCE_NAME_PREFIX-'..."
     
-    # Fetch resources by name prefix
-    if [ "$USE_JOBS" = true ]; then
-        EXISTING_RESOURCES=$(kubectl get jobs -n "$NAMESPACE" --no-headers -o custom-columns=NAME:.metadata.name 2>/dev/null | grep "$RESOURCE_NAME_PREFIX-")
-    else
-        EXISTING_RESOURCES=$(kubectl get pods -n "$NAMESPACE" --no-headers -o custom-columns=NAME:.metadata.name 2>/dev/null | grep "$RESOURCE_NAME_PREFIX-")
-    fi
+    # Use the appropriate resource type based on the DEPLOYMENT_TYPE_PLURAL variable
+    EXISTING_RESOURCES=$(kubectl get "$DEPLOYMENT_TYPE_PLURAL" -n "$NAMESPACE" --no-headers -o custom-columns=NAME:.metadata.name 2>/dev/null | grep "$RESOURCE_NAME_PREFIX-")
     
     if [ -n "$EXISTING_RESOURCES" ]; then
-        RESOURCE_COUNT=$(echo "$EXISTING_RESOURCES" | wc -l)
-        echo "Found $RESOURCE_COUNT existing $DEPLOYMENT_TYPE_PLURAL matching the name prefix '$RESOURCE_NAME_PREFIX-'."
-        echo "List:"
+        echo "WARNING: Found existing Kubernetes $DEPLOYMENT_TYPE_PLURAL with prefix '$RESOURCE_NAME_PREFIX-':"
         echo "$EXISTING_RESOURCES"
-        
-        #read -p "Delete these existing $DEPLOYMENT_TYPE_PLURAL? (y/n): " confirm1
-    else
-        echo "No existing $DEPLOYMENT_TYPE_PLURAL found matching the name prefix '$RESOURCE_NAME_PREFIX-'."
+        echo "These resources will continue to run unless manually deleted. New resources will also be deployed."
+        # You might want to add a prompt here to stop or continue.
     fi
-}
+} # <-- ADDED CLOSING BRACE
 
 deploy_agents() {
     echo "Deploying $NUM_AGENTS training agent(s) as $DEPLOYMENT_TYPE_PLURAL..."
     
-    OUTPUT_DIR="k8s/training_${DEPLOYMENT_TYPE_PLURAL}"
+    OUTPUT_DIR="${DEPLOYMENT_TYPE_PLURAL}"
     mkdir -p "$OUTPUT_DIR"
 
     # Use $RESOURCE_PREFIX (value of 'name:') for the K8s name prefix
     K8S_NAME_PREFIX="sweep-$RESOURCE_PREFIX"
 
-    for i in $(seq 1 $NUM_AGENTS); do
+    for i in $(seq 1 "$NUM_AGENTS"); do
         # Calculate the PVC index by applying the offset (starts at 5)
         CURRENT_PVC_NUM=$((i + PVC_OFFSET))
 
@@ -189,6 +181,8 @@ show_monitoring_commands() {
     echo "Sweep URL: https://wandb.ai/$ENTITY/$WANDB_PROJECT/sweeps/$SWEEP_ID" 
     echo ""
     kubectl get pods
+    sleep 30
+    kubectl logs "$CURRENT_RESOURCE_NAME" -f
 }
 
 # ============================================================================
