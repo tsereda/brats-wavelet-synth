@@ -1,0 +1,81 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: wandb-sweep-agent-{POD_NUM}
+  namespace: gai-lina-group
+  labels:
+    app: wandb-sweep
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: wandb-sweep
+    spec:
+      nodeSelector:
+        nautilus.io/linstor: "true"
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: PreferNoSchedule
+      containers:
+      - name: sweep-agent
+        image: gitlab-registry.nrp-nautilus.io/prp/jupyter-stack/prp
+        
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            sudo apt-get update && sudo apt-get install -y git wget p7zip-full
+            
+            git clone https://github.com/tsereda/wavelet-brats-synthesis.git
+            cd wavelet-brats-synthesis
+            
+            chmod +x run.sh
+            
+            ./run.sh
+
+            echo "Job completed successfully"
+        
+        env:
+        - name: WANDB_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: wandb-credentials
+              key: api-key
+        - name: WANDB_ENTITY
+          value: "timgsereda"
+        - name: WANDB_PROJECT
+          value: "wavelet-brats-synthesis"
+        - name: SWEEP_ID
+          value: "{SWEEP_ID}"
+        - name: WANDB_SWEEP_ID
+          value: "{SWEEP_ID}"
+        
+        resources:
+          requests:
+            memory: "25Gi"
+            cpu: "15"
+            nvidia.com/a100: "1"
+          limits:
+            memory: "30Gi"
+            cpu: "18"
+            nvidia.com/a100: "1"
+        
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+        - name: shm
+          mountPath: /dev/shm
+      
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: brats2025-{POD_NUM}
+      - name: shm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 16Gi
+      
+      restartPolicy: Never

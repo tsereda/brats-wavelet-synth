@@ -1,0 +1,56 @@
+project: test-brats-3dsynth
+name: 3dsynth
+program: app/scripts/train.py
+command:
+  - ${env}
+  - PYTHONPATH=${PYTHONPATH}:./app
+  - python
+  - ${program}
+  - ${args}
+method: bayes
+metric:
+  name: train/mse
+  goal: minimize 
+parameters:
+  data_dir:
+    value: ./datasets/BRATS2023/training
+  dataset:
+    value: brats
+  image_size:
+    value: 224
+  channel_mult:
+    value: "1,2,2,4,4" 
+  batch_size:
+    value: 2
+  num_workers:
+    value: 12
+  diffusion_steps:
+    value: 100
+  sample_schedule:
+    value: sampled
+  dims:
+    value: 3
+  attention_resolutions:
+    value: ""
+  num_heads:
+    value: 1
+  bottleneck_attention:
+    value: false
+  contr:
+    values: ['t2f']
+  num_channels:
+    value: 64
+  in_channels:
+    value: 32
+  out_channels:
+    value: 8
+  save_interval:
+    value: 5000
+  log_interval:
+    value: 100
+  wavelet:
+    values: ['db2']
+  special_checkpoint_steps:
+    value: "74500,100000,200000,300000,400000,600000"
+  save_to_wandb:
+    value: true
