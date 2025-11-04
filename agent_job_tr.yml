@@ -47,7 +47,7 @@ spec:
         - name: WANDB_ENTITY
           value: "timgsereda"
         - name: WANDB_PROJECT
-          value: "wavelet-brats-synthesis"
+          value: "{WANDB_PROJECT}"
         - name: SWEEP_ID
           value: "{SWEEP_ID}"
         - name: WANDB_SWEEP_ID
